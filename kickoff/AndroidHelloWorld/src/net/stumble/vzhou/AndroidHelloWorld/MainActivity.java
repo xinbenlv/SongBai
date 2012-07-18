@@ -1,6 +1,7 @@
-package net.stumble.vzhou;
+package net.stumble.vzhou.AndroidHelloWorld;
 
 
+import net.stumble.vzhou.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
