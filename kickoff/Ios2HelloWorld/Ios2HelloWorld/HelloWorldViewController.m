@@ -9,9 +9,7 @@
 #import "HelloWorldViewController.h"
 
 @interface HelloWorldViewController ()
-@property (weak, nonatomic) IBOutlet UITextField *textField;
-@property (weak, nonatomic) IBOutlet UILabel *label;
-- (IBAction)changeGreeting:(id)sender;
+
 
 @end
 
