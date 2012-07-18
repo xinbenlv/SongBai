@@ -1,16 +1,13 @@
-package net.stumble.vzhou.AndroidHelloWorld;
+package net.stumble.vzhou.android;
 
 
-import net.stumble.vzhou.R;
+import net.stumble.vzhou.android.R;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.support.v4.app.NavUtils;
-import android.text.Editable;
 
 public class MainActivity extends Activity {
 

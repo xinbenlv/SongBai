@@ -5,7 +5,7 @@
  * should not be modified by hand.
  */
 
-package net.stumble.vzhou;
+package net.stumble.vzhou.android;
 
 public final class R {
     public static final class attr {
