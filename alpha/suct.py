@@ -9,6 +9,8 @@ KEY_PATH = "/tmp/mykeystore"
 KEY_ALIAS = "mykeystore"
 KEY_CO = "CN=Zainan Victor Zhou, OU=Client, O=StumbleUpon.com, L=San Francisco, S=California, C=US"
 ADK_PLATFORM_IMAGES_DIR="/Users/vzhou/android-sdks/platforms/android-10/images"
+GHERKIN_SCRIPT = "helloworld.sugh"
+
 def write_file(filepath,content,flag="w"): # by default create, add a "b" to append
     f = open(filepath,flag)
     f.write(content)
@@ -55,71 +57,14 @@ def create_target_project():
 # 1. Save state: you can define a state when then finished, and beused as a "When"
 # 2. State transition verification
 
+import gherkin
 
-def gherkin_get_java_steps(s):
-    ''' 
-    gherkin_get_java_steps: given a string as input, find the steps of java
-    '''
-    predifined_steps = {
-        "I see memory is sufficient": "solo.assertMemoryNotLow();",
-        "I see current activity is MainActivity": 'solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");',
-
-        "I press button":'solo.clickOnButton("Button");',
-        "I see hello": '''
-         boolean expected = true;
-         boolean actual = solo.searchText("hello ");
-         assertEquals("hello not found", expected, actual); 
-         ''',
-    }
-    return predifined_steps[s]
-
-
-def gherkin_parser():
-    '''
-    Generate An object from a Gherkin script
-    ''' # TODO implement this
-    parsed = [
-        {"Scenario":"Launch",
-          "Given":[],
-          "When":[],
-          "Then":["I see memory is sufficient","I see current activity is MainActivity"],
-        },
-#        {"Scenario":"Hello ",
-#          "Given":[],
-#          "When":["I press button"],
-#          "Then":["I see hello"],
-#        },
-    ]
-    return parsed
-
-
-def gherkin_object_to_java(obj):
-    
-    obj_to_java = ""
-    for scenario in obj:
-        scenario_name = scenario['Scenario']
-        given = scenario['Given']
-        when = scenario['When']
-        then = scenario['Then']
-        code = '''
-    @Smoke
-    public void test%s() throws Exception {
-''' % scenario_name
-        for g in given:
-            code += gherkin_get_java_steps (g)
-        for w in when:
-            code += gherkin_get_java_steps (w)
-        for t in then:
-            code += gherkin_get_java_steps (t)
-        code += "}"
-        obj_to_java += code
-    return obj_to_java
 def generate_android_code():
     test_code = ""
 
 
-    test_obj = gherkin_parser()
-    test_code = gherkin_object_to_java(test_obj)
+    test_obj = gherkin.parse(open(GHERKIN_SCRIPT,"r"))
+    test_code = gherkin.obj_to_java(test_obj)
 
     code = '''package net.stumble.vzhou.test;
 import net.stumble.vzhou.android.MainActivity;

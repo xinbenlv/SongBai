@@ -40,27 +40,49 @@ def parse(s):
     '''
     Generate An object from a Gherkin script
     ''' # TODO implement this
-    parsed = [
-        {"Scenario":"Launch",
-          "Given":[],
-          "When":[],
-          "Then":[
-              ["I should see memory is sufficient",[]],
-              ["I should see current activity is",["MainActivity"]]
-          ],
-        },
-        {"Scenario":"Hello",
-          "Given":[],
-          "When":[
-            ["I press on the button",["Button"]]
-            
-          ],
-          "Then":[
-              ["I should see the text",["hello "]]
-          ],
-        },
-    ]
-
+    #    parsed = [
+    #        {"Scenario":"Launch",
+    #          "Given":[],
+    #          "When":[],
+    #          "Then":[
+    #              ["I should see memory is sufficient",[]],
+    #              ["I should see current activity is",["MainActivity"]]
+    #          ],
+    #        },
+    #        {"Scenario":"Hello",
+    #          "Given":[],
+    #          "When":[
+    #            ["I press on the button",["Button"]]
+    #            
+    #          ],
+    #          "Then":[
+    #              ["I should see the text",["hello "]]
+    #          ],
+    #        },
+    #    ]
+    #
+    parsed = []
+    scenario = None
+    for line in s:
+        
+        level = get_indent_level(line)
+        if level == 0: # a new scenario
+            if scenario != None:
+                parsed.append(scenario)
+            scenario = {}
+            scenario["Scenario"]=line[10:].split()[0]
+            scenario["Given"]=[]
+            scenario["When"]=[]
+            scenario["Then"]=[]
+        elif level == 4:
+            head = line[4:].split(":")[0].split()[0]
+            content = line[9:].split("\"")
+            action = content[0][0:len(content[0])-1]
+            text = content[1] if len(content) >=2 else None
+            scenario[head].append([action,[text]]) if text !=None else scenario[head].append([action,[]]) 
+    if scenario != None:
+        parsed.append(scenario)
+        
     return parsed
 
 
@@ -89,5 +111,5 @@ def obj_to_java(obj):
 
 
 if __name__ == "__main__":
-    obj = parse("")
+    obj = parse(open("helloworld.sugh","r"))
     print obj_to_java(obj)
