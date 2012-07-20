@@ -43,38 +43,101 @@ key.alias.password=%s
 def create_target_project():
     shutil.copytree(ORIGINAL_PATH,TARGET_PATH)
 
-def gerhkin_parser()
-    return [
-            {"Scenario":"Launch", "When":[],},
 
+# Gherkin Parser
+# Object definition:
+# Feature is a list of Scenario: feature  = [scenario1, scenario2,...]
+# Scenario is a dictionary contains Scenario name, #TODO name format
+#   Given: a list of set-up steps
+#   When: a key step for state transition
+#   Then: a list of assertions
+# Future features: # TODO
+# 1. Save state: you can define a state when then finished, and beused as a "When"
+# 2. State transition verification
+
+
+def gherkin_get_java_steps(s):
+    ''' 
+    gherkin_get_java_steps: given a string as input, find the steps of java
+    '''
+    predifined_steps = {
+        "I see memory is sufficient": "solo.assertMemoryNotLow();",
+        "I see current activity is MainActivity": 'solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");',
+
+        "I press button":'solo.clickOnButton("Button");',
+        "I see hello": '''
+         boolean expected = true;
+         boolean actual = solo.searchText("hello ");
+         assertEquals("hello not found", expected, actual); 
+         ''',
+    }
+    return predifined_steps[s]
+def gherkin_parser():
+    '''
+    Generate An object from a Gherkin script
+    ''' # TODO implement this
+    parsed = [
+        {"Scenario":"Launch",
+          "Given":[],
+          "When":[],
+          "Then":["I see memory is sufficient","I see current activity is MainActivity"],
+        },
+#        {"Scenario":"Hello ",
+#          "Given":[],
+#          "When":["I press button"],
+#          "Then":["I see hello"],
+#        },
     ]
+    return parsed
 
+
+def gherkin_object_to_java(obj):
+    
+    obj_to_java = ""
+    for scenario in obj:
+        scenario_name = scenario['Scenario']
+        given = scenario['Given']
+        when = scenario['When']
+        then = scenario['Then']
+        code = '''
+    @Smoke
+    public void test%s() throws Exception {
+''' % scenario_name
+        for g in given:
+            code += gherkin_get_java_steps (g)
+        for w in when:
+            code += gherkin_get_java_steps (w)
+        for t in then:
+            code += gherkin_get_java_steps (t)
+        code += "}"
+        obj_to_java += code
+    return obj_to_java
 def generate_android_code():
-    test = ""
+    test_code = ""
 
 
-    test1='''
-    @Smoke
-    public void testLaunch() throws Exception {
-        solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");
-        solo.assertMemoryNotLow();
-    }
-'''
-
-    test2='''
-
-    @Smoke
-    public void testHello() throws Exception {
-        solo.clickOnButton("Button");
-        boolean expected = true;
-        boolean actual = solo.searchText("hello ");
-        assertEquals("hello not found", expected, actual); 
-    }
-'''
-    test = test1 + test2
-
-
-
+#    test1='''
+#    @Smoke
+#    public void testLaunch() throws Exception {
+#        solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");
+#        solo.assertMemoryNotLow();
+#    }
+#    '''
+#
+#    test2='''
+#
+#    @Smoke
+#    public void testHello() throws Exception {
+#        solo.clickOnButton("Button");
+#        boolean expected = true;
+#        boolean actual = solo.searchText("hello ");
+#        assertEquals("hello not found", expected, actual); 
+#    }
+#'''
+#    test_code = test1 + test2
+#
+    test_obj = gherkin_parser()
+    test_code = gherkin_object_to_java(test_obj)
 
     code = '''package net.stumble.vzhou.test;
 import net.stumble.vzhou.android.MainActivity;
@@ -96,7 +159,12 @@ public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<Main
         //Robotium will finish all the activities that have been opened
         solo.finishOpenedActivities();
     }
-}''' % test
+}''' % test_code
+    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    print "Generated code"
+    print code
+    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+
 
     return code
 
