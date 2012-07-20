@@ -43,7 +43,56 @@ key.alias.password=%s
 def create_target_project():
     shutil.copytree(ORIGINAL_PATH,TARGET_PATH)
 
-    
+def generate_android_code():
+    test = ""
+    test1='''
+    @Smoke
+    public void testLaunch() throws Exception {
+        solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");
+        solo.assertMemoryNotLow();
+    }
+'''
+
+    test2='''
+
+    @Smoke
+    public void testHello() throws Exception {
+        solo.clickOnButton("Button");
+        boolean expected = true;
+        boolean actual = solo.searchText("hello ");
+        assertEquals("hello not found", expected, actual); 
+    }
+'''
+    test = test1 + test2
+
+
+
+
+    code = '''package net.stumble.vzhou.test;
+import net.stumble.vzhou.android.MainActivity;
+import com.jayway.android.robotium.solo.Solo;
+import android.test.ActivityInstrumentationTestCase2;
+import android.test.suitebuilder.annotation.Smoke;
+
+public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<MainActivity>{
+    public AndroidHelloWorldTest() {
+        super("net.stumble.vzhou.android", MainActivity.class);
+    }
+    private Solo solo;
+    public void setUp() throws Exception {
+        solo = new Solo(getInstrumentation(), getActivity());
+    }
+    %s 
+    @Override
+    public void tearDown() throws Exception {
+        //Robotium will finish all the activities that have been opened
+        solo.finishOpenedActivities();
+    }
+}''' % test
+
+    return code
+
+
 
 # Generate test project
 def create_test_project():
@@ -94,38 +143,7 @@ def create_test_project():
     # File creation at <root>/src
     os_system("mkdir -p %s/src/net/net/stumble/vzhou/test" % TEST_PATH)
     filepath = "%s/src/net/net/stumble/vzhou/test/AndroidHelloWorldTest.java" % TEST_PATH
-    content = '''package net.stumble.vzhou.test;
-import net.stumble.vzhou.android.MainActivity;
-import com.jayway.android.robotium.solo.Solo;
-import android.test.ActivityInstrumentationTestCase2;
-import android.test.suitebuilder.annotation.Smoke;
-
-public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<MainActivity>{
-    public AndroidHelloWorldTest() {
-        super("net.stumble.vzhou.android", MainActivity.class);
-    }
-    private Solo solo;
-    public void setUp() throws Exception {
-        solo = new Solo(getInstrumentation(), getActivity());
-    }
-    @Smoke
-    public void testLaunch() throws Exception {
-        solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");
-        solo.assertMemoryNotLow();
-    }
-    @Smoke
-    public void testHello() throws Exception {
-        solo.clickOnButton("Button");
-        boolean expected = true;
-        boolean actual = solo.searchText("hello ");
-        assertEquals("hello not found", expected, actual); 
-    }
-    @Override
-    public void tearDown() throws Exception {
-        //Robotium will finish all the activities that have been opened
-        solo.finishOpenedActivities();
-    }
-}'''
+    content = generate_android_code()
     write_file(filepath, content)
 
     # Flile creation at <root>/libs
@@ -176,6 +194,9 @@ def run_tests():
     os_system("adb shell input keyevent 82")
     
     os_system("cd %s && ant test" % TEST_PATH)
+
+
+
 def clean_up():
     f = os.popen("lsof -i tcp:38538")
     f.readline()
