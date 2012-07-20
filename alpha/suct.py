@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys,os,shutil
+import sys,os,shutil,time
 SUCT_PATH = "/Users/vzhou/ws/suct/alpha"
 ORIGINAL_PATH = "/Users/vzhou/ws/suct/kickoff/AndroidHelloWorld"
 TARGET_PATH = "/tmp/AndroidHelloWorld"
@@ -15,10 +15,12 @@ def write_file(filepath,content,flag="w"): # by default create, add a "b" to app
     f.close()
 
 
-
+def os_system(s):
+    print "RUN SCRIPT  $ " ,s
+    os.system(s)
 
 def create_keystore():
-    os.system("keytool -genkey -v -keystore %s -alias %s -keyalg RSA -keysize 2048 -validity 10000 -storepass %s -keypass %s -dname '%s' &" % (KEY_PATH,KEY_ALIAS,PASS,PASS,KEY_CO))
+    os_system("keytool -genkey -v -keystore %s -alias %s -keyalg RSA -keysize 2048 -validity 10000 -storepass %s -keypass %s -dname '%s' &" % (KEY_PATH,KEY_ALIAS,PASS,PASS,KEY_CO))
      
 def build_and_sign():
     content = '''key.store=%s
@@ -33,8 +35,10 @@ key.alias.password=%s
     write_file(filepath,content,"a")
     
 
-    os.system("cd %s && ant release" % TARGET_PATH) 
-    os.system("cd %s && ant release" % TEST_PATH) 
+    os_system("cd %s && ant release" % TARGET_PATH) 
+    os_system("cd %s && ant release" % TEST_PATH) 
+
+
 # Generate target project
 def create_target_project():
     shutil.copytree(ORIGINAL_PATH,TARGET_PATH)
@@ -76,7 +80,7 @@ def create_test_project():
 '''
     write_file(filepath,content)    
     # File creation at <root>/res
-    os.system("cp -r %s/resource/res/* %s/res/" %(SUCT_PATH,TEST_PATH)) # TODO should use a for loop to copy all
+    os_system("cp -r %s/resource/res/* %s/res/" %(SUCT_PATH,TEST_PATH)) # TODO should use a for loop to copy all
     os.mkdir("%s/res/values" % TEST_PATH)
     filepath = "%s/res/values/strings.xml" % TEST_PATH
     content = '''<?xml version="1.0" encoding="utf-8"?>
@@ -88,7 +92,7 @@ def create_test_project():
     write_file(filepath, content) 
     
     # File creation at <root>/src
-    os.system("mkdir -p %s/src/net/net/stumble/vzhou/test" % TEST_PATH)
+    os_system("mkdir -p %s/src/net/net/stumble/vzhou/test" % TEST_PATH)
     filepath = "%s/src/net/net/stumble/vzhou/test/AndroidHelloWorldTest.java" % TEST_PATH
     content = '''package net.stumble.vzhou.test;
 import net.stumble.vzhou.android.MainActivity;
@@ -128,16 +132,63 @@ public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<Main
     shutil.copytree("%s/resource/libs" % SUCT_PATH, "%s/libs" % TEST_PATH)
 
 def create_ant_profile():
-    os.system("cd %s && android update project -p %s" % (TARGET_PATH,TARGET_PATH))    
-    os.system("cd %s && android update test-project -m %s -p ." % (TEST_PATH,TARGET_PATH)) 
+    os_system("cd %s && android update project -p %s" % (TARGET_PATH,TARGET_PATH))    
+    os_system("cd %s && android update test-project -m %s -p ." % (TEST_PATH,TARGET_PATH)) 
 
 def lauch_emulator():
     #TODO create a avd 
-    os.system("cd %s && emulator -avd emulator-2 -no-skin -system system.img -kernel kernel-qemu -gpu off -qemu -initrd ramdisk.img &" % ADK_PLATFORM_IMAGES_DIR)
-    os.system("adb wait-for-device")
+    # os_system("cd %s && emulator -avd emulator-2 -no-skin -system system.img -kernel kernel-qemu -gpu off -qemu -initrd ramdisk.img &" % ADK_PLATFORM_IMAGES_DIR)
+     
+    os_system("cd ~/android-sdks/tools && emulator -no-boot-anim -ports 33917,38538 -prop persist.sys.language=en -prop persist.sys.country=US -avd e1 -no-snapshot-save -wipe-data -no-window &" )
+    print "START SERVER"
+    os_system("adb start-server")
+    print "TRY TO CONNECT"
+    while True:
+        f= os.popen("adb connect localhost:38538")
+        s = f.readline()
+        if not ("unable" in s):
+            break
+        print "Reconnecting ..."
+        time.sleep(0.5)
+     
+    print ("WAIT FOR DEVICE")
+    os_system("adb wait-for-device")
+    
+    print ("CONNECTED")
+    i = 0
+    while True:
+        f = os.popen("adb -s localhost:38538 shell getprop dev.bootcomplete")
+        s = f.readline()
+        if len(s)<=2:
+            continue
+        if s.split()[0] == "1":
+            break
+        time.sleep(0.5)
+        print "Still booting %s" % i
+        i+=1
+    print ("DEVICE FULLY BOOTED")
+
+    
 def run_tests():
-    os.system("adb shell input keyevent 82")
-    os.system("cd %s && ant test" % TEST_PATH)
+
+    os_system("cd %s && ant release install" % TARGET_PATH) 
+    os_system("cd %s && ant release install" % TEST_PATH) 
+    os_system("adb shell input keyevent 82")
+    
+    os_system("cd %s && ant test" % TEST_PATH)
+def clean_up():
+    f = os.popen("lsof -i tcp:38538")
+    f.readline()
+    s=f.readline() # second line
+    pid = s.split()[1]
+    os_system("kill %s" % pid)    
+    s=f.readline() # second line
+    pid = s.split()[1]
+    os_system("kill %s" % pid)    
+
+
+    os_system("rm -rf /tmp/AndroidHelloWorld* /tmp/mykeystore")
+
 if __name__ == "__main__":
 
     print("Starting StumbleUpon Cross-platform Tester (suct) on TARGET %s" % TARGET_PATH)
@@ -151,6 +202,7 @@ if __name__ == "__main__":
 
     lauch_emulator()
     run_tests()
+    clean_up()
 
-
+    print ("Da-la! Suct!!!")
 
