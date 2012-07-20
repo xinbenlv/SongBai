@@ -72,6 +72,8 @@ def gherkin_get_java_steps(s):
          ''',
     }
     return predifined_steps[s]
+
+
 def gherkin_parser():
     '''
     Generate An object from a Gherkin script
@@ -116,26 +118,6 @@ def generate_android_code():
     test_code = ""
 
 
-#    test1='''
-#    @Smoke
-#    public void testLaunch() throws Exception {
-#        solo.assertCurrentActivity("Expected MainActivit activity", "MainActivity");
-#        solo.assertMemoryNotLow();
-#    }
-#    '''
-#
-#    test2='''
-#
-#    @Smoke
-#    public void testHello() throws Exception {
-#        solo.clickOnButton("Button");
-#        boolean expected = true;
-#        boolean actual = solo.searchText("hello ");
-#        assertEquals("hello not found", expected, actual); 
-#    }
-#'''
-#    test_code = test1 + test2
-#
     test_obj = gherkin_parser()
     test_code = gherkin_object_to_java(test_obj)
 

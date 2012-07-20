@@ -1,0 +1,11 @@
+Feature: HelloWorld
+
+  Scenario: Launch
+    Given nothing happens
+    When nothing happens
+    Then I see memory is sufficient
+    Then I see current activity is MainActivity
+  Scenario: Hello
+    Given nothing happens
+    When I press button
+    Then I see hello  
