@@ -43,8 +43,16 @@ key.alias.password=%s
 def create_target_project():
     shutil.copytree(ORIGINAL_PATH,TARGET_PATH)
 
+def gerhkin_parser()
+    return [
+            {"Scenario":"Launch", "When":[],},
+
+    ]
+
 def generate_android_code():
     test = ""
+
+
     test1='''
     @Smoke
     public void testLaunch() throws Exception {
