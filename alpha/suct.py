@@ -1,20 +1,36 @@
 #!/usr/bin/env python
+
+
 import sys,os,shutil,time
+from xml.dom.minidom import parseString
+
+
+
+import logging
+logger = logging.getLogger("suct")
+hdlr = logging.FileHandler('/tmp/suct.log')
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+hdlr.setFormatter(formatter)
+logger.addHandler(hdlr) 
+logger.setLevel(logging.DEBUG)
+
+
 SUCT_PATH = os.path.realpath(os.path.dirname(__file__))
 
-ORIGINAL_PATH = "/Users/vzhou/Documents/workspace/Wiktionary" # "/Users/vzhou/ws/suct/kickoff/AndroidHelloWorld"
-TARGET_PATH = "/tmp/suct_target"
-TEST_PATH = "/tmp/suct_test"
+ORIGIN_PATH = ""
+TEMP_PATH = "/tmp/"
+TARGET_PATH = os.path.join(TEMP_PATH,"suct_target")
+TEST_PATH = os.path.join(TEMP_PATH,"suct_test")
 PASS="dnfe3294n"
 KEY_PATH = "/tmp/suct_keystore"
-KEY_ALIAS = "mykeystore"
-KEY_CO = "CN=Zainan Victor Zhou, OU=Client, O=StumbleUpon.com, L=San Francisco, S=California, C=US"
-ADK_PLATFORM_IMAGES_DIR="/Users/vzhou/android-sdks/platforms/android-10/images"
+KEY_ALIAS = "suct_keystore"
+KEY_CO = "CN=Suct User, OU=Client, O=StumbleUpon.com, L=San Francisco, S=California, C=US"
+ADK_PATH = "/Users/vzhou/android-sdks"
+ADK_PLATFORM_IMAGES_DIR=os.path.join(ADK_PATH,"platforms/android-10/images")
 
-GHERKIN_SCRIPT = os.path.join(SUCT_PATH,"examples/wiktionary.sugh")
-
-TARGET_PACKAGE = "com.example.android.wiktionary"# "net.stumble.vzhou.android"
-TARGET_ACTIVITY ="LookupActivity" # "MainActivity"
+GHERKIN_SCRIPT = ""
+TARGET_PACKAGE = ""
+TARGET_ACTIVITY =""
 
 def write_file(filepath,content,flag="w"): # by default create, add a "b" to append
     f = open(filepath,flag)
@@ -47,9 +63,29 @@ key.alias.password=%s
 
 
 # Generate target project
-def create_target_project():
-    shutil.copytree(ORIGINAL_PATH,TARGET_PATH)
+def read_from_target_project():
+    global TARGET_PACKAGE, TARGET_ACTIVITY
+    shutil.copytree(ORIGIN_PATH,TARGET_PATH)
+    manifest_target = os.path.join(TARGET_PATH,"AndroidManifest.xml")
+    file = open(manifest_target,"r")   
+     
+    data = file.read()
+    file.close()
+    dom = parseString(data)
+    
+    xmlTag = dom.getElementsByTagName("manifest")[0]
+    TARGET_PACKAGE = xmlTag.getAttribute("package")
 
+
+    childChildOfMainActivity = None
+    for xmlTag in dom.getElementsByTagName("category"):
+        if xmlTag.getAttribute("android:name") == "android.intent.category.LAUNCHER":
+            childChildOfMainActivity = xmlTag
+            break
+        # Shall always find a MAIN ACTIVITY whose "indent-filter/category" is "android.indent.category.LAUNCHER"
+    activity_android_name = childChildOfMainActivity.parentNode.parentNode.getAttribute("android:name") 
+    TARGET_ACTIVITY = activity_android_name.split('.')[-1]
+    print "TARGET_ACTIVITY",TARGET_ACTIVITY
 
 # Gherkin Parser
 # Object definition:
@@ -62,12 +98,11 @@ def create_target_project():
 # 1. Save state: you can define a state when then finished, and beused as a "When"
 # 2. State transition verification
 
-import gherkin
 
 def generate_android_code():
+
+    import gherkin
     test_code = ""
-
-
     test_obj = gherkin.parse(open(GHERKIN_SCRIPT,"r"))
     test_code = gherkin.obj_to_java(test_obj)
     
@@ -77,8 +112,8 @@ import com.jayway.android.robotium.solo.Solo;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.Smoke;
 
-public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<%s>{
-    public AndroidHelloWorldTest() {
+public class SuctTest extends ActivityInstrumentationTestCase2<%s>{
+    public SuctTest() {
         super("%s", %s.class);
     }
     private Solo solo;
@@ -92,10 +127,10 @@ public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<%s>{
         solo.finishOpenedActivities();
     }
 }''' % (TARGET_PACKAGE,TARGET_ACTIVITY,TARGET_ACTIVITY,TARGET_PACKAGE,TARGET_ACTIVITY,test_code)
-    print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+    print "=============================================="
     print "Generated code"
     print code
-    print "YYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYYY"
+    print "=============================================="
 
 
     return code
@@ -150,7 +185,7 @@ def create_test_project():
     
     # File creation at <root>/src
     os_system("mkdir -p %s/src/net/stumble/suct" % TEST_PATH)
-    filepath = "%s/src/net/stumble/suct/AndroidHelloWorldTest.java" % TEST_PATH
+    filepath = "%s/src/net/stumble/suct/SuctTest.java" % TEST_PATH
     content = generate_android_code()
     write_file(filepath, content)
 
@@ -162,10 +197,9 @@ def create_ant_profile():
     os_system("cd %s && android update test-project -m %s -p ." % (TEST_PATH,TARGET_PATH)) 
 
 def lauch_emulator():
-    #TODO create a avd 
     # os_system("cd %s && emulator -avd emulator-2 -no-skin -system system.img -kernel kernel-qemu -gpu off -qemu -initrd ramdisk.img &" % ADK_PLATFORM_IMAGES_DIR)
      
-    os_system("cd ~/android-sdks/tools && emulator -no-boot-anim -ports 33917,38538 -prop persist.sys.language=en -prop persist.sys.country=US -avd e1 -no-snapshot-save -wipe-data -no-window &" )
+    os_system("cd %s/tools && emulator -no-boot-anim -ports 33917,38538 -prop persist.sys.language=en -prop persist.sys.country=US -avd e1 -no-snapshot-save -wipe-data -no-window &" % ADK_PATH)
     print "START SERVER"
     os_system("adb start-server")
     print "TRY TO CONNECT"
@@ -198,7 +232,7 @@ def lauch_emulator():
 def run_tests():
     os_system("cd %s && ant release install" % TARGET_PATH) 
     os_system("cd %s && ant release install" % TEST_PATH) 
-    os_system("adb shell input keyevent 82")
+    os_system("adb shell input keyevent 82") # Unlock the screen
     os_system("cd %s && ant test" % TEST_PATH)
 
 def clean_up():
@@ -216,13 +250,26 @@ def clean_up():
     os_system("rm -rf %s" % TEST_PATH)
     os_system("rm -rf %s" % KEY_PATH)
 
+def parse_argument():
+    global ORIGIN_PATH, TEMP_PATH, GHERKIN_SCRIPT
+    import argparse
+    parser = argparse.ArgumentParser(description="SUCT: StumbleUpon Cross-platform Tester.")
+    parser.add_argument("origin", metavar="path", type=str,
+                       help="path to original project to for suct testing.")
+    parser.add_argument("gherkin", metavar="script", type=str, help="suct-gherkin script file.")
+    parser.add_argument("--tmp", metavar="temp", type=str, help="temporary directory for created projects.", default = TEMP_PATH)    
 
+    args = parser.parse_args()
+    ORIGIN_PATH = args.origin
+    GHERKIN_SCRIPT = args.gherkin
+    TEMP_PATH = args.tmp
 
 if __name__ == "__main__":
+    parse_argument()
 
-    print("Starting StumbleUpon Cross-platform Tester (suct) on TARGET %s" % TARGET_PATH)
+    print("Starting StumbleUpon Cross-platform Tester (suct) on ORIGIN %s" % ORIGIN_PATH)
 
-    create_target_project()
+    read_from_target_project()
     create_test_project()
     create_ant_profile()
     
@@ -234,4 +281,5 @@ if __name__ == "__main__":
     clean_up()
 
     print ("Da-la! Suct!!!")
+
 
