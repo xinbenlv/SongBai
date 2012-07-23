@@ -1,15 +1,17 @@
 #!/usr/bin/env python
 import sys,os,shutil,time
-SUCT_PATH = "/Users/vzhou/ws/suct/alpha"
+SUCT_PATH = os.path.realpath(os.path.dirname(__file__))
+
 ORIGINAL_PATH = "/Users/vzhou/ws/suct/kickoff/AndroidHelloWorld"
-TARGET_PATH = "/tmp/AndroidHelloWorld"
-TEST_PATH = "/tmp/AndroidHelloWorldTest"
+TARGET_PATH = "/tmp/suct_target"
+TEST_PATH = "/tmp/suct_test"
 PASS="dnfe3294n"
 KEY_PATH = "/tmp/mykeystore"
 KEY_ALIAS = "mykeystore"
 KEY_CO = "CN=Zainan Victor Zhou, OU=Client, O=StumbleUpon.com, L=San Francisco, S=California, C=US"
 ADK_PLATFORM_IMAGES_DIR="/Users/vzhou/android-sdks/platforms/android-10/images"
-GHERKIN_SCRIPT = "helloworld.sugh"
+
+GHERKIN_SCRIPT = os.path.join(SUCT_PATH,"examples/helloworld.sugh")
 
 def write_file(filepath,content,flag="w"): # by default create, add a "b" to append
     f = open(filepath,flag)
@@ -65,8 +67,10 @@ def generate_android_code():
 
     test_obj = gherkin.parse(open(GHERKIN_SCRIPT,"r"))
     test_code = gherkin.obj_to_java(test_obj)
+    #TODO generalization:
+    # need to get project code package : package net.stumble.vzhou.test
 
-    code = '''package net.stumble.vzhou.test;
+    code = '''package net.stumble.suct;
 import net.stumble.vzhou.android.MainActivity;
 import com.jayway.android.robotium.solo.Solo;
 import android.test.ActivityInstrumentationTestCase2;
@@ -110,7 +114,7 @@ def create_test_project():
     filepath = "%s/AndroidManifest.xml" % TEST_PATH
     content = '''<?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="net.stumble.vzhou.test"
+    package="net.stumble.suct"
     android:versionCode="1"
     android:versionName="1.0" >
     <uses-sdk android:minSdkVersion="8" />
@@ -138,14 +142,14 @@ def create_test_project():
     content = '''<?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">AndroidHelloWorldTestTest</string>
+    <string name="app_name">SuctTesting</string>
 
 </resources>'''
     write_file(filepath, content) 
     
     # File creation at <root>/src
-    os_system("mkdir -p %s/src/net/net/stumble/vzhou/test" % TEST_PATH)
-    filepath = "%s/src/net/net/stumble/vzhou/test/AndroidHelloWorldTest.java" % TEST_PATH
+    os_system("mkdir -p %s/src/net/net/stumble/suct" % TEST_PATH)
+    filepath = "%s/src/net/net/stumble/suct/AndroidHelloWorldTest.java" % TEST_PATH
     content = generate_android_code()
     write_file(filepath, content)
 
@@ -191,14 +195,10 @@ def lauch_emulator():
 
     
 def run_tests():
-
     os_system("cd %s && ant release install" % TARGET_PATH) 
     os_system("cd %s && ant release install" % TEST_PATH) 
     os_system("adb shell input keyevent 82")
-    
     os_system("cd %s && ant test" % TEST_PATH)
-
-
 
 def clean_up():
     f = os.popen("lsof -i tcp:38538")

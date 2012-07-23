@@ -37,10 +37,6 @@ Requirements
             P1 Gherkin predefined steps
             P1 Gherkin perdefined steps allowing parameters
 
-
-
-
-
     P1 Android support
         P1 Read Gherkin script and generate Robotium Code
         P1 Build and Sign target and test apk
