@@ -2,16 +2,19 @@
 import sys,os,shutil,time
 SUCT_PATH = os.path.realpath(os.path.dirname(__file__))
 
-ORIGINAL_PATH = "/Users/vzhou/ws/suct/kickoff/AndroidHelloWorld"
+ORIGINAL_PATH = "/Users/vzhou/Documents/workspace/Wiktionary" # "/Users/vzhou/ws/suct/kickoff/AndroidHelloWorld"
 TARGET_PATH = "/tmp/suct_target"
 TEST_PATH = "/tmp/suct_test"
 PASS="dnfe3294n"
-KEY_PATH = "/tmp/mykeystore"
+KEY_PATH = "/tmp/suct_keystore"
 KEY_ALIAS = "mykeystore"
 KEY_CO = "CN=Zainan Victor Zhou, OU=Client, O=StumbleUpon.com, L=San Francisco, S=California, C=US"
 ADK_PLATFORM_IMAGES_DIR="/Users/vzhou/android-sdks/platforms/android-10/images"
 
-GHERKIN_SCRIPT = os.path.join(SUCT_PATH,"examples/helloworld.sugh")
+GHERKIN_SCRIPT = os.path.join(SUCT_PATH,"examples/wiktionary.sugh")
+
+TARGET_PACKAGE = "com.example.android.wiktionary"# "net.stumble.vzhou.android"
+TARGET_ACTIVITY ="LookupActivity" # "MainActivity"
 
 def write_file(filepath,content,flag="w"): # by default create, add a "b" to append
     f = open(filepath,flag)
@@ -67,18 +70,16 @@ def generate_android_code():
 
     test_obj = gherkin.parse(open(GHERKIN_SCRIPT,"r"))
     test_code = gherkin.obj_to_java(test_obj)
-    #TODO generalization:
-    # need to get project code package : package net.stumble.vzhou.test
-
+    
     code = '''package net.stumble.suct;
-import net.stumble.vzhou.android.MainActivity;
+import %s.%s;
 import com.jayway.android.robotium.solo.Solo;
 import android.test.ActivityInstrumentationTestCase2;
 import android.test.suitebuilder.annotation.Smoke;
 
-public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<MainActivity>{
+public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<%s>{
     public AndroidHelloWorldTest() {
-        super("net.stumble.vzhou.android", MainActivity.class);
+        super("%s", %s.class);
     }
     private Solo solo;
     public void setUp() throws Exception {
@@ -90,7 +91,7 @@ public class AndroidHelloWorldTest extends ActivityInstrumentationTestCase2<Main
         //Robotium will finish all the activities that have been opened
         solo.finishOpenedActivities();
     }
-}''' % test_code
+}''' % (TARGET_PACKAGE,TARGET_ACTIVITY,TARGET_ACTIVITY,TARGET_PACKAGE,TARGET_ACTIVITY,test_code)
     print "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
     print "Generated code"
     print code
@@ -120,14 +121,14 @@ def create_test_project():
     <uses-sdk android:minSdkVersion="8" />
     <instrumentation
         android:name="android.test.InstrumentationTestRunner"
-        android:targetPackage="net.stumble.vzhou.android" />
+        android:targetPackage="%s" />
     <application
         android:icon="@drawable/ic_launcher"
         android:label="@string/app_name" >
         <uses-library android:name="android.test.runner" />
     </application>
 </manifest>
-'''
+'''  % TARGET_PACKAGE
     write_file(filepath,content)
    
     # Create project.properties 
@@ -148,8 +149,8 @@ def create_test_project():
     write_file(filepath, content) 
     
     # File creation at <root>/src
-    os_system("mkdir -p %s/src/net/net/stumble/suct" % TEST_PATH)
-    filepath = "%s/src/net/net/stumble/suct/AndroidHelloWorldTest.java" % TEST_PATH
+    os_system("mkdir -p %s/src/net/stumble/suct" % TEST_PATH)
+    filepath = "%s/src/net/stumble/suct/AndroidHelloWorldTest.java" % TEST_PATH
     content = generate_android_code()
     write_file(filepath, content)
 
@@ -211,7 +212,11 @@ def clean_up():
     os_system("kill %s" % pid)    
 
 
-    os_system("rm -rf /tmp/AndroidHelloWorld* /tmp/mykeystore")
+    os_system("rm -rf %s" % TARGET_PATH)
+    os_system("rm -rf %s" % TEST_PATH)
+    os_system("rm -rf %s" % KEY_PATH)
+
+
 
 if __name__ == "__main__":
 

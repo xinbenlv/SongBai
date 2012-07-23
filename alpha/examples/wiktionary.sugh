@@ -1,0 +1,3 @@
+Scenario: Launch
+    Then I should see memory is sufficient
+    Then I should see current activity is "LookupActivity"
