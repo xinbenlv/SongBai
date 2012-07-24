@@ -103,7 +103,7 @@ def generate_android_code():
 
     import gherkin
     test_code = ""
-    test_obj = gherkin.parse(open(GHERKIN_SCRIPT,"r"))
+    (feature,test_obj) = gherkin.parse(open(GHERKIN_SCRIPT,"r"))
     test_code = gherkin.obj_to_java(test_obj)
     
     code = '''package net.stumble.suct;

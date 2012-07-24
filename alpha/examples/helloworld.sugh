@@ -1,9 +1,10 @@
-Scenario: Launch
-    Then I should see memory is sufficient
-    Then I should see current activity is "MainActivity"
-Scenario: Hello
-    When I press on the button "Button"
-    Then I should see the text "hello "
-Scenario: HelloFail
-    When I press on the button "Button"
-    Then I should see the text "hello unexpected name"
+Feature: HelloWorld
+    Scenario: Launch
+        Then I should see memory is sufficient
+        Then I should see current activity is "MainActivity"
+    Scenario: Hello
+        When I press on the button "Button"
+        Then I should see the text "hello "
+    Scenario: HelloFail
+        When I press on the button "Button"
+        Then I should see the text "hello unexpected name"
