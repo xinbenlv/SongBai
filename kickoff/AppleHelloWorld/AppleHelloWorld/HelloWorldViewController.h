@@ -12,7 +12,7 @@
 
 @property (weak, nonatomic) IBOutlet UITextField *textField;
 @property (weak, nonatomic) IBOutlet UILabel *label;
-
-- (IBAction)setLabel:(id)sender;
-
+@property (copy, nonatomic) NSString *userName;
+- (IBAction)changeGreeting:(id)sender;
+    
 @end

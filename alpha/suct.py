@@ -267,7 +267,7 @@ def parse_argument():
 if __name__ == "__main__":
     parse_argument()
 
-    print("Starting StumbleUpon Cross-platform Tester (suct) on ORIGIN %s" % ORIGIN_PATH)
+    print("Starting testing on ORIGIN %s" % ORIGIN_PATH)
 
     read_from_target_project()
     create_test_project()
@@ -280,6 +280,6 @@ if __name__ == "__main__":
     run_tests()
     clean_up()
 
-    print ("Da-la! Suct!!!")
+    print ("Finished testing!")
 
 

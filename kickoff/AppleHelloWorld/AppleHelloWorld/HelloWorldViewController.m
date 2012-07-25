@@ -15,7 +15,7 @@
 @implementation HelloWorldViewController
 @synthesize textField;
 @synthesize label;
-
+@synthesize userName;
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -24,8 +24,6 @@
 
 - (void)viewDidUnload
 {
-    [self setLabel:nil];
-    [self setTextField:nil];
     [super viewDidUnload];
     // Release any retained subviews of the main view.
 }
@@ -35,15 +33,9 @@
     return (interfaceOrientation != UIInterfaceOrientationPortraitUpsideDown);
 }
 
-- (IBAction)setLabel:(id)sender {
-    
-    NSLog(@"button pressed");
-    NSString *nameString = @"world";
 
-    NSString *greeting = [[NSString alloc] initWithFormat:@"Hello, %@!", nameString];
-    
-    self.label.text = greeting;
-    
-    
+
+- (IBAction)changeGreeting:(id)sender {
+    self.label.text = @"hello ";
 }
 @end
