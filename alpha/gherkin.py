@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 # This is only a simple simple parser to convert a Gherkin script into Robotium/KIF  testing snippet
 
-GHERKIN_
 def gherkin_get_java_steps(s,arg):
     ''' 
     gherkin_get_java_steps: given a string as input, find the steps of java

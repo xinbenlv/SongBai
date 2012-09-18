@@ -266,10 +266,12 @@ def parse_argument():
 
 if __name__ == "__main__":
     parse_argument()
+    clean_up()
 
     print("Starting testing on ORIGIN %s" % ORIGIN_PATH)
 
     read_from_target_project()
+    
     create_test_project()
     create_ant_profile()
     
@@ -278,8 +280,8 @@ if __name__ == "__main__":
 
     lauch_emulator()
     run_tests()
-    clean_up()
 
+    # clean_up()
     print ("Finished testing!")
 
 

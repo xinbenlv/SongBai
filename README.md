@@ -2,7 +2,6 @@ suct: StumbleUpon Cross-platform Tester
 is a cross-platform Behavior Driven Development (BDD) tool for iOS and Android
 
 Created: 2012-07-17
-Author: Zainan Victor Zhou, Jeff Sheldon
 
 Dependencies:
 
